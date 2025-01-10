@@ -2,15 +2,16 @@ package com.diallodev.customer;
 
 import com.diallodev.clients.fraud.FraudCheckResponse;
 import com.diallodev.clients.fraud.FraudClient;
+import com.diallodev.clients.notification.NotificationClient;
+import com.diallodev.clients.notification.NotificationRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 @Service
 public record CustomerService(
         CustomerRepository customerRepository,
-        RestTemplate restTemplate,
-        FraudClient fraudClient
-        ) {
+        FraudClient fraudClient,
+        NotificationClient notificationClient
+) {
 
 
     public void registerCustomer(CustomerRequest customerRequest) {
@@ -30,5 +31,12 @@ public record CustomerService(
         if (fraudCheckResponse != null && fraudCheckResponse.isFraudster()) {
             throw new IllegalStateException("Fraudster");
         }
+
+        notificationClient.sendNotification(
+                new NotificationRequest(
+                        customer.getId(),
+                        customer.getEmail(),
+                        String.format("Hi %s, welcome to DialloDev...", customer.getFirstName()))
+        );
     }
 }
